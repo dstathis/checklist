@@ -58,3 +58,11 @@ class Checklist:
         new_task = Task(name, description, parent)
         self.tasks.append(new_task)
         self.idmap[new_task.name] = new_task
+
+    def completeTask(self, name):
+        task = idmap[name]
+        task.complete()
+
+    def uncompleteTask(self, name):
+        task = idmap[name]
+        task.uncomplete()
