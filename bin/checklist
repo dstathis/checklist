@@ -1,0 +1,50 @@
+#!/usr/bin/python3
+
+import argparse
+import os
+
+from checklist import Task
+from checklist import Checklist
+
+CHECKLIST_DIR = os.path.expanduser('~/.config/checklist')
+PICKLE_PATH = '{}/data.pkl'.format(CHECKLIST_DIR)
+CONFIG_PATH = '{}/checklist.ini'.format(CHECKLIST_DIR)
+
+
+def list_tasks(args):
+    print("List!")
+
+
+def add(args):
+    print("Add!")
+
+
+COMMANDS = {'list': list_tasks,
+            'add': add
+            }
+
+
+def parse():
+    main_parser = argparse.ArgumentParser('A simple program for '
+                                          'keeping track of tasks')
+    subparsers = main_parser.add_subparsers(dest='command')
+
+    parser_list = subparsers.add_parser('list', help='List open tasks')
+    parser_list.add_argument('--all', '-a', action='store_true',
+                             help='Print all tasks '
+                             '(including completed tasks)')
+
+    parser_add = subparsers.add_parser('add', help='Add a new task')
+
+    return main_parser.parse_args()
+
+
+def main():
+    if not os.path.isdir(CHECKLIST_DIR):
+        os.mkdir(CHECKLIST_DIR)
+    args = parse()
+    COMMANDS[args.command](args)
+
+
+if __name__ == '__main__':
+    main()
