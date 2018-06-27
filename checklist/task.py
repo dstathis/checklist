@@ -31,3 +31,9 @@ class Task:
 
     def addChild(self, child):
         self.children.append(child.name)
+
+    def complete():
+        self.completed = True
+
+    def uncomplete():
+        self.completed = False

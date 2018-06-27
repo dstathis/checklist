@@ -19,6 +19,7 @@
 
 import argparse
 import os
+import sys
 
 from checklist import Task
 from checklist import Checklist
@@ -42,8 +43,9 @@ COMMANDS = {'list': list_tasks,
 
 
 def parse():
-    main_parser = argparse.ArgumentParser('A simple program for '
-                                          'keeping track of tasks')
+    main_parser = argparse.ArgumentParser(prog='checklist',
+                                          description='A simple program '
+                                          'for keeping track of tasks')
     subparsers = main_parser.add_subparsers(dest='command')
 
     parser_list = subparsers.add_parser('list', help='List open tasks')
@@ -53,7 +55,13 @@ def parse():
 
     parser_add = subparsers.add_parser('add', help='Add a new task')
 
-    return main_parser.parse_args()
+    args = main_parser.parse_args()
+
+    if not args.command:
+        main_parser.print_usage()
+        sys.exit(1)
+
+    return args
 
 
 def main():
