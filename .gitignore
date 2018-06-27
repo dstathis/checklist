@@ -1,2 +1,5 @@
 checklist/__pycache__/*
 venv
+build
+pychecklist.egg-info
+dist
