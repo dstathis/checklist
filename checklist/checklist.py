@@ -45,17 +45,21 @@ class Checklist:
             self.load(pickle_path)
         else:
             self.tasks = []
+            self.completed_tasks = []
             self.idmap = {}
 
     def load(self, pickle_path):
-        with open(pickle_path, 'rb') as pkl:
-            self.tasks = pickle.load(pkl)
+        with open(pickle_path, 'rb') as pkl_file:
+            self.tasks, self.completed_tasks = pickle.load(pkl_file)
         for task in self.tasks:
             self.idmap[task.name] = task
+        for task in self.completed_tasks:
+            self.idmap[task.name] = task
+
 
     def save(self, pickle_path):
-        with open(pickle_path, 'wb') as pkl:
-            pickle.dump(self.tasks, pkl, protocol=PICKLE_VERS)
+        with open(pickle_path, 'wb') as pkl_file:
+            pickle.dump((self.tasks, self.completed_tasks), pkl_file, protocol=PICKLE_VERS)
 
     def newTask(self, name, description=None, parent=None):
         if name in self.idmap:
@@ -69,12 +73,23 @@ class Checklist:
         self.idmap[new_task.name] = new_task
 
     def completeTask(self, name):
-        task = idmap[name]
+        task = self.idmap[name]
         task.complete()
+        if self._childrenCompleted(task.name) and task.parent == None:
+            self.tasks.remove(task)
+            self.completed_tasks.append(task)
 
     def uncompleteTask(self, name):
-        task = idmap[name]
+        task = self.idmap[name]
         task.uncomplete()
 
     def getTask(self, name):
         return self.idmap[name]
+
+    def _childrenCompleted(self, name):
+        for child in self.idmap[name].children:
+            if not self.idmap[child].completed:
+                return False
+            if not self._childrenCompleted(child):
+                return False
+        return True

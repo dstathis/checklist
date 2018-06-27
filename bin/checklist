@@ -27,7 +27,7 @@ import checklist
 CHECKLIST_DIR = os.path.expanduser('~/.config/checklist')
 PICKLE_PATH = '{}/data.pkl'.format(CHECKLIST_DIR)
 CONFIG_PATH = '{}/checklist.ini'.format(CHECKLIST_DIR)
-SYMBOLS = {True: '\u2611',
+SYMBOLS = {True: '\u2612',
            False: '\u2610'}
 
 
@@ -50,6 +50,14 @@ def list_tasks(args, checklst):
             node = pptree.Node('{} {}'.format(SYMBOLS[task.completed], task.name), main_node)
             create_subnodes(task, node, checklst)
     pptree.print_tree(main_node)
+    if args.all:
+        main_node = pptree.Node("Completed Tasks")
+        for task in checklst.completed_tasks:
+            if task.parent is None:
+                node = pptree.Node('{} {}'.format(SYMBOLS[task.completed], task.name), main_node)
+                create_subnodes(task, node, checklst)
+        pptree.print_tree(main_node)
+
 
 
 def add(args, checklst):
@@ -62,8 +70,14 @@ def add(args, checklst):
         error('The chosen parent "{}" does not exist.'.format(args.parent))
 
 
+def complete(args, checklst):
+    checklst.completeTask(args.task_name)
+    checklst.save(PICKLE_PATH)
+
+
 COMMANDS = {'list': list_tasks,
             'add': add,
+            'complete': complete,
             }
 
 
@@ -81,6 +95,9 @@ def parse():
     parser_add = subparsers.add_parser('add', help='Add a new task')
     parser_add.add_argument('task_name', help='A description of the task')
     parser_add.add_argument('--parent', help='Parent task')
+
+    parser_complete = subparsers.add_parser('complete', help='Mark a task complete')
+    parser_complete.add_argument('task_name', help='The task to mark complete')
 
     args = main_parser.parse_args()
 
