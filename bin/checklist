@@ -19,10 +19,10 @@
 
 import argparse
 import os
+import pptree
 import sys
 
-from checklist import Task
-from checklist import Checklist
+import checklist
 
 CHECKLIST_DIR = os.path.expanduser('~/.config/checklist')
 PICKLE_PATH = '{}/data.pkl'.format(CHECKLIST_DIR)
@@ -31,23 +31,39 @@ SYMBOLS = {True: '\u2611',
            False: '\u2610'}
 
 
-def list_tasks(args, checklist):
-    print('Tasks:\n')
-    for task in checklist.tasks:
-        print('{} {}'.format(SYMBOLS[task.completed], task.name))
+def error(message):
+    print(message, file=sys.stderr)
+    exit(1)
 
 
-def add(args, checklist):
+def create_subnodes(task, parent_node, checklst):
+    for child in task.children:
+        task = checklst.getTask(child)
+        node = pptree.Node('{} {}'.format(SYMBOLS[task.completed], task.name), parent_node)
+        create_subnodes(task, node, checklst)
+
+
+def list_tasks(args, checklst):
+    main_node = pptree.Node("Tasks")
+    for task in checklst.tasks:
+        if task.parent is None:
+            node = pptree.Node('{} {}'.format(SYMBOLS[task.completed], task.name), main_node)
+            create_subnodes(task, node, checklst)
+    pptree.print_tree(main_node)
+
+
+def add(args, checklst):
     try:
-        checklist.newTask(name=args.task_name)
-        checklist.save(PICKLE_PATH)
-    except TaskExistsException:
-        print('The task "{}" already exists.'.format(args.task_name))
-        sys.exit(1)
+        checklst.newTask(name=args.task_name, parent=args.parent)
+        checklst.save(PICKLE_PATH)
+    except checklist.checklist.TaskExistsException:
+        error('The task "{}" already exists.'.format(args.task_name))
+    except checklist.checklist.ParentNotExistsException:
+        error('The chosen parent "{}" does not exist.'.format(args.parent))
 
 
 COMMANDS = {'list': list_tasks,
-            'add': add
+            'add': add,
             }
 
 
@@ -64,6 +80,7 @@ def parse():
 
     parser_add = subparsers.add_parser('add', help='Add a new task')
     parser_add.add_argument('task_name', help='A description of the task')
+    parser_add.add_argument('--parent', help='Parent task')
 
     args = main_parser.parse_args()
 
@@ -79,10 +96,10 @@ def main():
         os.mkdir(CHECKLIST_DIR)
     args = parse()
     if os.path.exists(PICKLE_PATH):
-        checklist = Checklist(PICKLE_PATH)
+        checklst = checklist.Checklist(PICKLE_PATH)
     else:
-        checklist = Checklist()
-    COMMANDS[args.command](args, checklist)
+        checklst = checklist.Checklist()
+    COMMANDS[args.command](args, checklst)
 
 
 if __name__ == '__main__':

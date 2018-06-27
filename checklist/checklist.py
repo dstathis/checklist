@@ -32,6 +32,11 @@ class TaskExistsException(ChecklistException):
          ChecklistException.__init__(self, *args, **kwargs)
 
 
+class ParentNotExistsException(ChecklistException):
+     def __init__(self, *args, **kwargs):
+         ChecklistException.__init__(self, *args, **kwargs)
+
+
 class Checklist:
 
     def __init__(self, pickle_path=None):
@@ -55,7 +60,11 @@ class Checklist:
     def newTask(self, name, description=None, parent=None):
         if name in self.idmap:
             raise TaskExistsException('Task "{}" already exists'.format(name))
-        new_task = Task(name, description, parent)
+        if parent and (parent not in self.idmap):
+            raise ParentNotExistsException('Parent "{}" does not exist'.format(parent))
+        new_task = Task(name=name, description=description, parent=parent)
+        if parent:
+            self.idmap[parent].addChild(new_task.name)
         self.tasks.append(new_task)
         self.idmap[new_task.name] = new_task
 
@@ -68,4 +77,4 @@ class Checklist:
         task.uncomplete()
 
     def getTask(self, name):
-        return idmap[name]
+        return self.idmap[name]
