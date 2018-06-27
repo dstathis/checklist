@@ -22,6 +22,16 @@ from checklist.task import Task
 PICKLE_VERS = 4
 
 
+class ChecklistException(Exception):
+     def __init__(self, *args, **kwargs):
+         Exception.__init__(self, *args, **kwargs)
+
+
+class TaskExistsException(ChecklistException):
+     def __init__(self, *args, **kwargs):
+         ChecklistException.__init__(self, *args, **kwargs)
+
+
 class Checklist:
 
     def __init__(self, pickle_path=None):
@@ -43,6 +53,8 @@ class Checklist:
             pickle.dump(self.tasks, pkl, protocol=PICKLE_VERS)
 
     def newTask(self, name, description=None, parent=None):
+        if name in self.idmap:
+            raise TaskExistsException('Task "{}" already exists'.format(name))
         new_task = Task(name, description, parent)
         self.tasks.append(new_task)
         self.idmap[new_task.name] = new_task
