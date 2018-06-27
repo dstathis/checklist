@@ -66,3 +66,6 @@ class Checklist:
     def uncompleteTask(self, name):
         task = idmap[name]
         task.uncomplete()
+
+    def getTask(self, name):
+        return idmap[name]

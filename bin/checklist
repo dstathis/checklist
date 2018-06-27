@@ -27,14 +27,23 @@ from checklist import Checklist
 CHECKLIST_DIR = os.path.expanduser('~/.config/checklist')
 PICKLE_PATH = '{}/data.pkl'.format(CHECKLIST_DIR)
 CONFIG_PATH = '{}/checklist.ini'.format(CHECKLIST_DIR)
+SYMBOLS = {True: '\u2611',
+           False: '\u2610'}
 
 
-def list_tasks(args):
-    print("List!")
+def list_tasks(args, checklist):
+    print('Tasks:\n')
+    for task in checklist.tasks:
+        print('{} {}'.format(SYMBOLS[task.completed], task.name))
 
 
-def add(args):
-    print("Add!")
+def add(args, checklist):
+    try:
+        checklist.newTask(name=args.task_name)
+        checklist.save(PICKLE_PATH)
+    except TaskExistsException:
+        print('The task "{}" already exists.'.format(args.task_name))
+        sys.exit(1)
 
 
 COMMANDS = {'list': list_tasks,
@@ -54,6 +63,7 @@ def parse():
                              '(including completed tasks)')
 
     parser_add = subparsers.add_parser('add', help='Add a new task')
+    parser_add.add_argument('task_name', help='A description of the task')
 
     args = main_parser.parse_args()
 
@@ -68,7 +78,11 @@ def main():
     if not os.path.isdir(CHECKLIST_DIR):
         os.mkdir(CHECKLIST_DIR)
     args = parse()
-    COMMANDS[args.command](args)
+    if os.path.exists(PICKLE_PATH):
+        checklist = Checklist(PICKLE_PATH)
+    else:
+        checklist = Checklist()
+    COMMANDS[args.command](args, checklist)
 
 
 if __name__ == '__main__':
